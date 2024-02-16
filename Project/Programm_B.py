@@ -4,10 +4,12 @@ from scapy.all import sniff, ICMP
 # 1. Empfang der von Programm A gesendeten Daten vom Netzwerkstack.
 def process_packet(packet):
     if packet.haslayer(ICMP):
-        # 2. Decodierung der Daten (Umwandlung in Text).
+        # 2. Nur ICMP Requests (Typ 8) werden berücksichtigt. ICPM Replies (Typ 0) wird ignoriert.
+        if packet[ICMP].type != 8: return
+        # 3. Decodierung der Daten (Umwandlung in Text).
         encoded_data = packet[ICMP].load
         data = decode_data(encoded_data)
-        # 3. Ausgabe der decodierten Daten auf dem Bildschirm.
+        # 4. Ausgabe der decodierten Daten auf dem Bildschirm.
         print(data)
 
 # Decodierung der Daten
