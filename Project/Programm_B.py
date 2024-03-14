@@ -1,25 +1,38 @@
+import argparse
 import base64
-from scapy.all import sniff, ICMP
+import binascii
+import socket
+import struct
 
 # 1. Empfang der von Programm A gesendeten Daten vom Netzwerkstack.
-def process_packet(packet):
-    if packet.haslayer(ICMP):
-        # 2. Nur ICMP Requests (Typ 8) werden berücksichtigt. ICPM Replies (Typ 0) wird ignoriert.
-        if packet[ICMP].type != 8: return
-        # 3. Decodierung der Daten (Umwandlung in Text).
-        encoded_data = packet[ICMP].load
-        data = decode_data(encoded_data)
-        # 4. Ausgabe der decodierten Daten auf dem Bildschirm.
-        print(data)
+def receive_data():
+    icmp = socket.getprotobyname('icmp')
+    sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, icmp)
 
-# Decodierung der Daten
-def decode_data(encoded_data):
-    decoded_data = base64.b64decode(encoded_data).decode()
-    return decoded_data
+    print('ICMP listener started')
+    print('listening ...\n')
 
-# Hauptfunktion
+    while True:
+        packet, _ = sock.recvfrom(65565)
+        # IP header is the first 20 bytes of the packet
+        ip_header = packet[:20]
+        # ICMP packet is in the IP packet's data
+        icmp_packet = packet[20:]
+        # ICMP header is in the first 8 bytes of the ICMP packet
+        type, code, checksum, identifier, sequence_number = struct.unpack('bbHHh', icmp_packet[:8])
+        if type == 8:  # Echo Request
+            # Decoding the data
+            encoded_data = icmp_packet[8:]
+            try:
+                data = base64.b64decode(encoded_data).decode()
+                # Displaying the decoded data on the screen
+                print(f"Incomming Message >>\n{data}")
+                print("<< End of Message")
+            except Exception as e:
+                print(f"error: {e}")
+
 def main():
-    sniff(filter="icmp and host destination_ip", prn=process_packet)
+    receive_data()
 
 if __name__ == "__main__":
     main()
