@@ -20,7 +20,7 @@ def receive_data():
         icmp_packet = packet[20:]
         # ICMP header is in the first 8 bytes of the ICMP packet
         type, code, checksum, identifier, sequence_number = struct.unpack('bbHHh', icmp_packet[:8])
-        if type == 8:  # Echo Request
+        if type == 8:  # Echo Request - All other types are irrelevant to us
             # Decoding the data
             encoded_data = icmp_packet[8:]
             try:
