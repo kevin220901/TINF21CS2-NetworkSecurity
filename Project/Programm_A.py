@@ -56,6 +56,10 @@ def send_data(encoded_data, destination_ip):
     identifier = 0
     sequence_number = 0
 
+    # Pack header fields into struct with checksum set to zero
+    header = struct.pack('bbHHh', type, code, checksum, identifier, sequence_number)
+    packet = header + encoded_data.encode()  # Packet is header + payload
+
     # Calculate checksum
     checksum = calculate_checksum(packet)
     header = struct.pack('bbHHh', type, code, socket.htons(checksum), identifier, sequence_number)
